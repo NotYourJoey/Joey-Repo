@@ -41,28 +41,50 @@ window.addEventListener('scroll', () => {
 
 
 
-// Form submission handling
-const contactForm = document.querySelector('.contact-form');
+// Form submission handling with Formspree
+const contactForm = document.getElementById('contactForm');
+const submitBtn = document.getElementById('submitBtn');
+const formMessage = document.getElementById('formMessage');
+
 if (contactForm) {
-    contactForm.addEventListener('submit', (e) => {
+    contactForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         
-        // Get form data
-        const formData = new FormData(contactForm);
-        const name = contactForm.querySelector('input[type="text"]').value;
-        const email = contactForm.querySelector('input[type="email"]').value;
-        const subject = contactForm.querySelector('input[placeholder="Subject"]').value;
-        const message = contactForm.querySelector('textarea').value;
+        // Show loading state
+        submitBtn.classList.add('loading');
+        formMessage.style.display = 'none';
         
-        // Simple validation
-        if (!name || !email || !subject || !message) {
-            showNotification('Please fill in all fields', 'error');
-            return;
+        try {
+            const formData = new FormData(contactForm);
+            
+            // Send to Formspree
+            const response = await fetch(contactForm.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'Accept': 'application/json'
+                }
+            });
+            
+            if (response.ok) {
+                // Success
+                formMessage.textContent = 'Thank you! Your message has been sent successfully.';
+                formMessage.className = 'form-message success';
+                formMessage.style.display = 'block';
+                contactForm.reset();
+            } else {
+                // Error
+                throw new Error('Failed to send message');
+            }
+        } catch (error) {
+            // Error handling
+            formMessage.textContent = 'Sorry, there was an error sending your message. Please try again.';
+            formMessage.className = 'form-message error';
+            formMessage.style.display = 'block';
+        } finally {
+            // Remove loading state
+            submitBtn.classList.remove('loading');
         }
-        
-        // Simulate form submission
-        showNotification('Message sent successfully!', 'success');
-        contactForm.reset();
     });
 }
 
